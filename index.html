@@ -1022,6 +1022,24 @@ function addThinkingRow(){
 }
 
 // ================= SEND HANDLER =================
+function isQuotaError(e){
+  const d = (errorDetail(e) || '').toLowerCase();
+  return d.includes('balance') || d.includes('fund') || d.includes('quota') || d.includes('limit') || d.includes('upgrade') || d.includes('permission') || d.includes('auth');
+}
+
+async function tryRecoverAndRetry(e){
+  if(!isQuotaError(e)) return false;
+  try{
+    if(typeof puter !== 'undefined' && puter.auth && !puter.auth.isSignedIn()){
+      showToast('Free usage limit reached — please sign in (free) to continue');
+      await puter.auth.signIn();
+      await refreshIdentity();
+      return true;
+    }
+  }catch(_){ /* user closed sign-in or it failed */ }
+  return false;
+}
+
 async function handleSend(){
   const text = chatInput.value.trim();
   if(!text) return;
@@ -1030,134 +1048,188 @@ async function handleSend(){
   autoResize();
   sendBtn.disabled = true;
 
-  if(!puterReady()){
-    renderMessage('user', text, 'text');
-    addMessageToSession('user', text, 'text');
-    const msg = 'AI engine could not load. Please check your internet connection and make sure this page is opened from its live web link, then reload and try again.';
-    renderMessage('ai', msg, 'text');
-    addMessageToSession('ai', msg, 'text');
-    sendBtn.disabled = false;
-    return;
-  }
+  try{
+    if(!puterReady()){
+      renderMessage('user', text, 'text');
+      addMessageToSession('user', text, 'text');
+      const msg = 'AI engine could not load. Please check your internet connection and make sure this page is opened from its live web link, then reload and try again.';
+      renderMessage('ai', msg, 'text');
+      addMessageToSession('ai', msg, 'text');
+      return;
+    }
 
-  // ---- IMAGE EDIT (attachment present) ----
-  if(attachedImage){
-    const imgToEdit = attachedImage;
-    clearAttachment();
-    renderMessage('user', imgToEdit.dataUrl, 'image');
-    renderMessage('user', text, 'text');
-    addMessageToSession('user', imgToEdit.dataUrl, 'image');
-    addMessageToSession('user', text, 'text');
+    // ---- IMAGE EDIT (attachment present) ----
+    if(attachedImage){
+      const imgToEdit = attachedImage;
+      clearAttachment();
+      renderMessage('user', imgToEdit.dataUrl, 'image');
+      renderMessage('user', text, 'text');
+      addMessageToSession('user', imgToEdit.dataUrl, 'image');
+      addMessageToSession('user', text, 'text');
 
-    const thinkingRow = addThinkingRow();
-
-    try{
+      const thinkingRow = addThinkingRow();
       const base64Only = imgToEdit.dataUrl.split(',')[1];
-      const imgEl = await puter.ai.txt2img(text, {
+      const editOpts = {
         provider: 'gemini',
         model: 'gemini-3-pro-image-preview',
         input_image: base64Only,
         input_image_mime_type: imgToEdit.mimeType
-      });
-      thinkingRow.remove();
-      const url = imgEl.src;
-      renderMessage('ai', url, 'image');
-      addMessageToSession('ai', url, 'image');
-    }catch(e){
-      thinkingRow.remove();
-      const msg = 'Could not edit the image. ' + errorDetail(e);
-      renderMessage('ai', msg, 'text');
-      addMessageToSession('ai', msg, 'text');
+      };
+      try{
+        const imgEl = await puter.ai.txt2img(text, editOpts);
+        thinkingRow.remove();
+        renderMessage('ai', imgEl.src, 'image');
+        addMessageToSession('ai', imgEl.src, 'image');
+      }catch(e){
+        if(await tryRecoverAndRetry(e)){
+          try{
+            const imgEl2 = await puter.ai.txt2img(text, editOpts);
+            thinkingRow.remove();
+            renderMessage('ai', imgEl2.src, 'image');
+            addMessageToSession('ai', imgEl2.src, 'image');
+            return;
+          }catch(e2){
+            thinkingRow.remove();
+            const msg = 'Could not edit the image. ' + errorDetail(e2);
+            renderMessage('ai', msg, 'text');
+            addMessageToSession('ai', msg, 'text');
+            return;
+          }
+        }
+        thinkingRow.remove();
+        const msg = 'Could not edit the image. ' + errorDetail(e);
+        renderMessage('ai', msg, 'text');
+        addMessageToSession('ai', msg, 'text');
+      }
+      return;
     }
-    sendBtn.disabled = false;
-    return;
-  }
 
-  // ---- IMAGE GENERATION MODE ----
-  if(imageMode){
+    // ---- IMAGE GENERATION MODE ----
+    if(imageMode){
+      renderMessage('user', text, 'text');
+      addMessageToSession('user', text, 'text');
+      const thinkingRow = addThinkingRow();
+      const genOpts = { provider: 'openai-image-generation', model: 'gpt-image-1.5' };
+
+      try{
+        const imgEl = await puter.ai.txt2img(text, genOpts);
+        thinkingRow.remove();
+        renderMessage('ai', imgEl.src, 'image');
+        addMessageToSession('ai', imgEl.src, 'image');
+      }catch(e){
+        if(await tryRecoverAndRetry(e)){
+          try{
+            const imgEl2 = await puter.ai.txt2img(text, genOpts);
+            thinkingRow.remove();
+            renderMessage('ai', imgEl2.src, 'image');
+            addMessageToSession('ai', imgEl2.src, 'image');
+            setImageMode(false);
+            return;
+          }catch(e2){
+            thinkingRow.remove();
+            const msg = 'Could not generate the image. ' + errorDetail(e2);
+            renderMessage('ai', msg, 'text');
+            addMessageToSession('ai', msg, 'text');
+            setImageMode(false);
+            return;
+          }
+        }
+        thinkingRow.remove();
+        const msg = 'Could not generate the image. ' + errorDetail(e);
+        renderMessage('ai', msg, 'text');
+        addMessageToSession('ai', msg, 'text');
+      }
+      setImageMode(false);
+      return;
+    }
+
+    // ---- NORMAL TEXT CHAT ----
     renderMessage('user', text, 'text');
     addMessageToSession('user', text, 'text');
     const thinkingRow = addThinkingRow();
 
+    const s = getCurrentSession();
+    const historyForApi = s.messages
+      .filter(m => m.type !== 'image')
+      .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+    const fullMessages = [
+      {role:'system', content:'You are Open Studio AI, an AI assistant developed by Hasnain Sheikh. If anyone asks who made you, who developed you, who your creator is, or what company built you, you must answer clearly: "I was developed by Hasnain Sheikh." Do not mention OpenAI, Puter, or any other company as your developer or creator, even if asked directly or indirectly, and even if you are unsure of the underlying technology — always attribute your development to Hasnain Sheikh. If someone asks for more details about Hasnain Sheikh specifically (such as his age, location, or education), you may share: he is 18 years old, from Sargodha, Punjab, Pakistan, and currently a Part 2 student at Lab Model College. Only share these personal details if specifically asked about the developer; do not volunteer them unprompted in unrelated conversations. Beyond identity questions, respond with the same depth, clarity, structure, and helpfulness as top-tier AI assistants: give complete, well-organized, thoughtful answers, use examples where useful, and maintain a warm, professional, confident tone. Always respond in the same language the user writes in, matching their language exactly. Keep all numerals in English/Arabic numeral form (0-9) regardless of the response language.'},
+      ...historyForApi
+    ];
+
+    async function runChat(){
+      const response = await puter.ai.chat(fullMessages, { model: 'gpt-5.4-nano', stream: true });
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      row.appendChild(bubble);
+      chatScroll.appendChild(row);
+
+      let fullText = '';
+      for await (const part of response){
+        if(part && part.text){
+          fullText += part.text;
+          bubble.textContent = fullText;
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+        }
+      }
+      if(!fullText){ fullText = 'No response received. Please try again.'; bubble.textContent = fullText; }
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      actions.innerHTML = `
+        <button class="copy-btn" title="Copy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="speak-btn" title="Read aloud">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+      `;
+      actions.querySelector('.copy-btn').onclick = () => {
+        navigator.clipboard.writeText(fullText).then(() => showToast('Copied'));
+      };
+      actions.querySelector('.speak-btn').onclick = () => speakText(fullText);
+      chatScroll.appendChild(actions);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+
+      addMessageToSession('ai', fullText, 'text');
+      if(autoSpeak) speakText(fullText);
+    }
+
     try{
-      const imgEl = await puter.ai.txt2img(text, { provider: 'openai-image-generation', model: 'gpt-image-1.5' });
+      await runChat();
       thinkingRow.remove();
-      const url = imgEl.src;
-      renderMessage('ai', url, 'image');
-      addMessageToSession('ai', url, 'image');
     }catch(e){
       thinkingRow.remove();
-      const msg = 'Could not generate the image. ' + errorDetail(e);
+      if(await tryRecoverAndRetry(e)){
+        const thinkingRow2 = addThinkingRow();
+        try{
+          await runChat();
+          thinkingRow2.remove();
+        }catch(e2){
+          thinkingRow2.remove();
+          const msg = 'Something went wrong. ' + errorDetail(e2);
+          renderMessage('ai', msg, 'text');
+          addMessageToSession('ai', msg, 'text');
+        }
+        return;
+      }
+      const msg = 'Something went wrong. ' + errorDetail(e);
       renderMessage('ai', msg, 'text');
       addMessageToSession('ai', msg, 'text');
     }
-    setImageMode(false);
+  }catch(fatal){
+    // Absolute safety net: no matter what breaks above, tell the user instead of going silent
+    try{
+      const msg = 'Something went wrong. ' + errorDetail(fatal);
+      renderMessage('ai', msg, 'text');
+      addMessageToSession('ai', msg, 'text');
+    }catch(_){ /* ignore */ }
+  }finally{
     sendBtn.disabled = false;
-    return;
   }
-
-  // ---- NORMAL TEXT CHAT ----
-  renderMessage('user', text, 'text');
-  addMessageToSession('user', text, 'text');
-  const thinkingRow = addThinkingRow();
-
-  const s = getCurrentSession();
-  const historyForApi = s.messages
-    .filter(m => m.type !== 'image')
-    .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
-
-  const fullMessages = [
-    {role:'system', content:'You are Open Studio AI, an AI assistant developed by Hasnain Sheikh. If anyone asks who made you, who developed you, who your creator is, or what company built you, you must answer clearly: "I was developed by Hasnain Sheikh." Do not mention OpenAI, Puter, or any other company as your developer or creator, even if asked directly or indirectly, and even if you are unsure of the underlying technology — always attribute your development to Hasnain Sheikh. If someone asks for more details about Hasnain Sheikh specifically (such as his age, location, or education), you may share: he is 18 years old, from Sargodha, Punjab, Pakistan, and currently a Part 2 student at Lab Model College. Only share these personal details if specifically asked about the developer; do not volunteer them unprompted in unrelated conversations. Beyond identity questions, respond with the same depth, clarity, structure, and helpfulness as top-tier AI assistants: give complete, well-organized, thoughtful answers, use examples where useful, and maintain a warm, professional, confident tone. Always respond in the same language the user writes in, matching their language exactly. Keep all numerals in English/Arabic numeral form (0-9) regardless of the response language.'},
-    ...historyForApi
-  ];
-
-  try{
-    const response = await puter.ai.chat(fullMessages, { model: 'gpt-5.4-nano', stream: true });
-    thinkingRow.remove();
-
-    const row = document.createElement('div');
-    row.className = 'msg-row ai';
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    row.appendChild(bubble);
-    chatScroll.appendChild(row);
-
-    let fullText = '';
-    for await (const part of response){
-      if(part && part.text){
-        fullText += part.text;
-        bubble.textContent = fullText;
-        chatScroll.scrollTop = chatScroll.scrollHeight;
-      }
-    }
-    if(!fullText){ fullText = 'No response received. Please try again.'; bubble.textContent = fullText; }
-
-    const actions = document.createElement('div');
-    actions.className = 'msg-actions';
-    actions.innerHTML = `
-      <button class="copy-btn" title="Copy">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      </button>
-      <button class="speak-btn" title="Read aloud">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-      </button>
-    `;
-    actions.querySelector('.copy-btn').onclick = () => {
-      navigator.clipboard.writeText(fullText).then(() => showToast('Copied'));
-    };
-    actions.querySelector('.speak-btn').onclick = () => speakText(fullText);
-    chatScroll.appendChild(actions);
-    chatScroll.scrollTop = chatScroll.scrollHeight;
-
-    addMessageToSession('ai', fullText, 'text');
-    if(autoSpeak) speakText(fullText);
-  }catch(e){
-    thinkingRow.remove();
-    const msg = 'Something went wrong. ' + errorDetail(e);
-    renderMessage('ai', msg, 'text');
-    addMessageToSession('ai', msg, 'text');
-  }
-  sendBtn.disabled = false;
 }
 sendBtn.onclick = handleSend;
 
