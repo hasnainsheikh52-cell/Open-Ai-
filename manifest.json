@@ -1,0 +1,25 @@
+{
+  "name": "Open Studio AI",
+  "short_name": "Open Studio AI",
+  "description": "Open Studio AI - free unlimited AI chat, image generation, image editing, and voice assistant. Developed by Hasnain Sheikh.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1013",
+  "theme_color": "#0e1013",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Open Studio AI</title>
+<meta name="description" content="Open Studio AI is an AI assistant developed by Hasnain Sheikh, an 18-year-old developer from Sargodha, Punjab, Pakistan, currently a Part 2 student at Lab Model College.">
+<meta name="author" content="Hasnain Sheikh">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Hasnain Sheikh",
+  "description": "Developer of Open Studio AI. 18 years old, from Sargodha, Punjab, Pakistan. Currently a Part 2 student at Lab Model College.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Sargodha",
+    "addressRegion": "Punjab",
+    "addressCountry": "Pakistan"
+  },
+  "alumniOf": {
+    "@type": "CollegeOrUniversity",
+    "name": "Lab Model College"
+  },
+  "jobTitle": "Developer",
+  "knowsAbout": ["Web Development", "AI Applications", "Progressive Web Apps"]
+}
+</script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e1013">
+<script src="https://js.puter.com/v2/"></script>
+<style>
+  :root{
+    --bg:#0e1013;
+    --sidebar:#131519;
+    --panel:#181b20;
+    --elevated:#20242c;
+    --elevated-2:#262b34;
+    --border:#282c34;
+    --border-soft:#1f2329;
+    --text:#ececf1;
+    --text-dim:#8e919a;
+    --text-faint:#5b5f68;
+    --accent:#2f81f7;
+    --accent-hover:#4a91f8;
+    --accent-soft:rgba(47,129,247,0.13);
+    --danger:#e5534b;
+    --danger-soft:rgba(229,83,75,0.13);
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --radius:14px;
+  }
+  html[data-theme="light"]{
+    --bg:#ffffff;
+    --sidebar:#f7f7f8;
+    --panel:#f2f2f4;
+    --elevated:#ececee;
+    --elevated-2:#e4e4e7;
+    --border:#e2e2e5;
+    --border-soft:#ececee;
+    --text:#0d0d0f;
+    --text-dim:#6e6e78;
+    --text-faint:#9a9aa2;
+    --accent:#2f81f7;
+    --accent-hover:#1c6fe6;
+    --accent-soft:rgba(47,129,247,0.10);
+    --danger:#d3392f;
+    --danger-soft:rgba(211,57,47,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overscroll-behavior:none;}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--font);
+    display:flex;height:100vh;height:100dvh;overflow:hidden;font-size:15px;
+    transition:background 0.2s ease,color 0.2s ease;
+  }
+  button{font-family:inherit;cursor:pointer;background:none;border:none;color:inherit;}
+  svg{display:block;flex-shrink:0;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+  /* ===== SIDEBAR ===== */
+  #sidebar{
+    width:270px;min-width:270px;background:var(--sidebar);
+    display:flex;flex-direction:column;border-right:1px solid var(--border-soft);
+    transition:margin-left 0.25s ease;
+  }
+  #sidebar.hidden{margin-left:-270px;}
+  .sidebar-top{padding:12px;}
+  .new-chat-btn{
+    width:100%;display:flex;align-items:center;gap:10px;
+    padding:11px 13px;border:1px solid var(--border);border-radius:10px;
+    background:var(--panel);color:var(--text);font-size:14px;font-weight:500;
+  }
+  .new-chat-btn:active{background:var(--elevated);}
+  .session-list{flex:1;overflow-y:auto;padding:4px 8px;display:flex;flex-direction:column;gap:2px;}
+  .session-empty{padding:14px 11px;color:var(--text-faint);font-size:12.5px;line-height:1.5;}
+  .session-item{
+    display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:9px;
+    color:var(--text-dim);font-size:13.5px;position:relative;overflow:hidden;
+  }
+  .session-item span.label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .session-item.active{background:var(--elevated);color:var(--text);}
+  .session-item:active{background:var(--panel);}
+  .session-item .del{opacity:0;flex-shrink:0;color:var(--text-faint);padding:2px;}
+  .session-item:hover .del, .session-item.active .del{opacity:1;}
+
+  .sidebar-bottom{
+    padding:8px;border-top:1px solid var(--border-soft);
+  }
+  .profile-row{
+    display:flex;align-items:center;gap:10px;padding:9px 9px;border-radius:10px;width:100%;
+  }
+  .profile-row:active{background:var(--panel);}
+  .profile-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;
+  }
+  .profile-info{flex:1;text-align:left;overflow:hidden;}
+  .profile-name{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .profile-sub{font-size:11.5px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ===== MAIN ===== */
+  #main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;}
+  .topbar{
+    display:flex;align-items:center;gap:12px;padding:12px 16px;
+    border-bottom:1px solid var(--border-soft);background:var(--bg);
+    z-index:5;
+  }
+  .icon-btn{
+    width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:var(--text-dim);flex-shrink:0;
+  }
+  .icon-btn:active{background:var(--panel);}
+  .topbar-title{font-size:15px;font-weight:600;flex:1;}
+  .topbar-title .model-tag{color:var(--text-faint);font-weight:400;font-size:12px;margin-left:8px;}
+
+  /* CHAT AREA */
+  #chat-scroll{flex:1;overflow-y:auto;padding:20px 0 12px;}
+  .msg-row{display:flex;padding:4px 18px;margin-bottom:2px;}
+  .msg-row.user{justify-content:flex-end;}
+  .msg-bubble{
+    max-width:78%;padding:12px 15px;border-radius:16px;font-size:15px;line-height:1.6;
+    white-space:pre-wrap;word-wrap:break-word;
+  }
+  .msg-row.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:5px;}
+  .msg-row.ai .msg-bubble{background:var(--panel);border:1px solid var(--border-soft);border-bottom-left-radius:5px;}
+  .msg-row.system .msg-bubble{background:none;color:var(--text-faint);font-size:12.5px;text-align:center;margin:0 auto;}
+  .msg-actions{display:flex;gap:2px;margin-top:5px;padding-left:2px;}
+  .msg-actions button{
+    width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    color:var(--text-faint);
+  }
+  .msg-actions button:active{background:var(--panel);color:var(--text-dim);}
+  .msg-img-wrap{max-width:78%;display:flex;flex-direction:column;gap:6px;}
+  .msg-img{max-width:100%;border-radius:14px;border:1px solid var(--border-soft);display:block;}
+  .thinking{display:flex;gap:4px;padding:4px 2px;}
+  .thinking span{width:6px;height:6px;border-radius:50%;background:var(--text-faint);animation:bounce 1.1s infinite;}
+  .thinking span:nth-child(2){animation-delay:0.15s;}
+  .thinking span:nth-child(3){animation-delay:0.3s;}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:0.4;}30%{transform:translateY(-4px);opacity:1;}}
+
+  .welcome{
+    height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:20px;gap:8px;
+  }
+  .welcome .mark{
+    width:52px;height:52px;border-radius:14px;background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:10px;
+  }
+  .welcome h1{font-size:21px;font-weight:600;}
+  .welcome p{color:var(--text-dim);font-size:14px;max-width:320px;line-height:1.5;}
+  .suggestions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:center;max-width:360px;}
+  .suggestions button{
+    background:var(--panel);border:1px solid var(--border);color:var(--text-dim);
+    padding:9px 13px;border-radius:11px;font-size:12.5px;
+  }
+  .suggestions button:active{background:var(--elevated);}
+
+  /* ===== TEMPLATE MENU ===== */
+  .template-menu{
+    position:absolute;bottom:100%;left:16px;margin-bottom:8px;
+    background:var(--elevated);border:1px solid var(--border);border-radius:12px;
+    padding:6px;display:none;flex-direction:column;min-width:210px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  .template-menu.show{display:flex;}
+  .template-menu button{
+    padding:9px 11px;border-radius:8px;text-align:left;font-size:13.5px;color:var(--text);
+    display:flex;align-items:center;gap:9px;
+  }
+  .template-menu button:active{background:var(--panel);}
+  .template-menu button svg{color:var(--text-faint);}
+
+  /* ===== INPUT BAR ===== */
+  .composer{
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--border-soft);background:var(--bg);position:relative;
+  }
+  .mode-indicator{
+    display:none;align-items:center;gap:6px;font-size:12px;color:var(--accent);
+    margin-bottom:8px;padding:0 2px;
+  }
+  .mode-indicator.show{display:flex;}
+  .mode-indicator button{color:var(--text-faint);margin-left:auto;}
+  .attach-preview{
+    display:none;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:8px 10px;margin-bottom:8px;font-size:12.5px;color:var(--text-dim);
+  }
+  .attach-preview.show{display:flex;}
+  .attach-preview img{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+  .attach-preview span{flex:1;}
+  .attach-preview button{color:var(--text-faint);flex-shrink:0;}
+  .input-shell{
+    display:flex;align-items:flex-end;gap:6px;background:var(--panel);
+    border:1px solid var(--border);border-radius:20px;padding:6px 6px 6px 12px;
+  }
+  .input-shell:focus-within{border-color:var(--accent);}
+  .input-shell textarea{
+    flex:1;background:none;border:none;color:var(--text);resize:none;
+    font-size:15px;font-family:var(--font);max-height:120px;padding:8px 2px;line-height:1.4;
+  }
+  .input-shell textarea:focus{outline:none;}
+  .input-shell textarea::placeholder{color:var(--text-faint);}
+  .composer-btn{
+    width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    color:var(--text-dim);flex-shrink:0;
+  }
+  .composer-btn:active{background:var(--elevated);}
+  .composer-btn.active-state{color:var(--accent);background:var(--accent-soft);}
+  .composer-btn.recording{color:var(--danger);background:var(--danger-soft);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.55;}}
+  .send-btn{
+    width:38px;height:38px;border-radius:12px;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .send-btn:disabled{opacity:0.35;}
+  .composer-hint{text-align:center;font-size:11px;color:var(--text-faint);margin-top:8px;}
+
+  /* ===== MODAL ===== */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:60;
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  @media(min-width:600px){.modal-overlay{align-items:center;}}
+  .modal{
+    background:var(--panel);width:100%;max-width:440px;border-radius:18px 18px 0 0;
+    border:1px solid var(--border);padding:0 0 calc(10px + env(safe-area-inset-bottom));
+    max-height:86vh;overflow-y:auto;
+  }
+  @media(min-width:600px){.modal{border-radius:18px;}}
+  .modal-header{
+    display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;
+    position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border-soft);z-index:2;
+  }
+  .modal-header h3{font-size:17px;font-weight:600;}
+  .modal-body{padding:6px 20px 4px;}
+
+  .settings-tabs{display:flex;gap:4px;padding:10px 20px 0;border-bottom:1px solid var(--border-soft);overflow-x:auto;}
+  .settings-tab{
+    padding:9px 4px;font-size:13px;color:var(--text-faint);white-space:nowrap;border-bottom:2px solid transparent;
+    margin-right:14px;font-weight:500;
+  }
+  .settings-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+  .settings-pane{display:none;padding:16px 0 4px;}
+  .settings-pane.active{display:block;}
+
+  .profile-card{display:flex;align-items:center;gap:13px;padding:6px 0 18px;}
+  .profile-card .profile-avatar{width:52px;height:52px;font-size:19px;}
+  .profile-card-name{font-size:16px;font-weight:600;}
+  .profile-card-sub{font-size:12.5px;color:var(--text-faint);margin-top:2px;}
+
+  .field-group{margin-bottom:14px;}
+  .field-group label{font-size:12.5px;color:var(--text-dim);display:block;margin-bottom:6px;font-weight:500;}
+  .field-group input,.field-group select{
+    width:100%;background:var(--elevated);border:1px solid var(--border);color:var(--text);
+    padding:11px 13px;border-radius:10px;font-family:var(--font);font-size:13.5px;
+  }
+  .field-group input:focus,.field-group select:focus{outline:none;border-color:var(--accent);}
+
+  .setting-row{
+    display:flex;align-items:center;justify-content:space-between;padding:13px 2px;
+    border-bottom:1px solid var(--border-soft);gap:10px;
+  }
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row-label{font-size:14px;font-weight:500;}
+  .setting-row-sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+  .toggle{width:42px;height:25px;border-radius:20px;background:var(--elevated-2);position:relative;flex-shrink:0;border:1px solid var(--border);}
+  .toggle.on{background:var(--accent);border-color:var(--accent);}
+  .toggle .knob{width:19px;height:19px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.18s ease;}
+  .toggle.on .knob{transform:translateX(17px);}
+
+  .theme-options{display:flex;gap:8px;}
+  .theme-opt{
+    flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--elevated);
+    font-size:12.5px;text-align:center;color:var(--text-dim);
+  }
+  .theme-opt.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+
+  .btn-block{
+    width:100%;padding:12px;border-radius:11px;font-weight:600;font-size:14px;margin-top:6px;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-danger{background:var(--danger-soft);color:var(--danger);}
+  .btn-outline{background:var(--elevated);color:var(--text);border:1px solid var(--border);}
+
+  .note-box{
+    font-size:12.5px;color:var(--text-dim);line-height:1.55;background:var(--elevated);
+    padding:12px 13px;border-radius:11px;border:1px solid var(--border-soft);margin-bottom:14px;
+  }
+  .about-line{font-size:12px;color:var(--text-faint);text-align:center;margin:16px 0 4px;}
+
+  #overlay-scrim{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:15;display:none;
+  }
+  #overlay-scrim.show{display:block;}
+
+  /* ===== SPLASH ===== */
+  #splash{
+    position:fixed;inset:0;background:var(--bg);z-index:100;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    transition:opacity 0.4s ease;
+  }
+  #splash.hide{opacity:0;pointer-events:none;}
+  #splash .splash-logo{
+    width:60px;height:60px;border-radius:16px;background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;color:var(--accent);
+    animation:splashPulse 1.15s ease-in-out infinite;
+  }
+  #splash .splash-name{font-size:15px;font-weight:600;color:var(--text-dim);letter-spacing:0.3px;}
+  @keyframes splashPulse{
+    0%,100%{transform:scale(1);opacity:1;}
+    50%{transform:scale(1.1);opacity:0.7;}
+  }
+
+  .toast{
+    position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:var(--elevated-2);color:var(--text);padding:10px 16px;border-radius:11px;font-size:13px;
+    z-index:80;opacity:0;pointer-events:none;transition:opacity 0.2s ease,transform 0.2s ease;
+    border:1px solid var(--border);max-width:80vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  @media(min-width:769px){
+    #overlay-scrim{display:none !important;}
+  }
+  @media(max-width:768px){
+    #sidebar{position:fixed;top:0;bottom:0;left:0;z-index:20;height:100%;}
+    #sidebar.hidden{margin-left:0;transform:translateX(-100%);}
+    #sidebar:not(.hidden){transform:translateX(0);}
+  }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+  </div>
+  <div class="splash-name">Open Studio AI</div>
+</div>
+
+<div id="overlay-scrim"></div>
+<div class="toast" id="toast"></div>
+
+<aside id="sidebar" class="hidden">
+  <div class="sidebar-top">
+    <button class="new-chat-btn" id="newChatBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New chat
+    </button>
+  </div>
+  <div class="session-list" id="sessionList"></div>
+  <div class="sidebar-bottom">
+    <button class="profile-row" id="openSettingsSidebar">
+      <div class="profile-avatar" id="sidebarAvatar">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName">Guest</div>
+        <div class="profile-sub" id="sidebarSub">Tap for settings</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<div id="main">
+  <div class="topbar">
+    <button class="icon-btn" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+    <div class="topbar-title">Open Studio AI<span class="model-tag" id="modelTag">Fast</span></div>
+    <button class="icon-btn" id="openSettingsTop">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div id="chat-scroll">
+    <div class="welcome" id="welcomeScreen">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h1 id="welcomeGreeting">Open Studio AI</h1>
+      <p id="welcomeSub">Ask anything, generate images, or write content.</p>
+      <div class="suggestions">
+        <button data-fill="Write rap lyrics about chasing your dreams">Rap lyrics</button>
+        <button data-fill="Generate an image of ">Generate an image</button>
+        <button data-fill="Write a product description for ">Product description</button>
+        <button data-fill="Explain this topic simply: ">Explain simply</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="composer">
+    <div class="mode-indicator" id="modeIndicator">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Image generation mode
+      <button id="exitImageMode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="template-menu" id="templateMenu">
+      <button data-template="Write rap lyrics about ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        Rap lyrics
+      </button>
+      <button data-template="Write a product description for ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg>
+        Product description
+      </button>
+      <button data-template="Write a social media caption for ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        Social caption
+      </button>
+      <button data-template="Write a blog article about ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Blog article
+      </button>
+      <button data-template="Write persuasive ad copy for ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8L13 21l-2 1"/></svg>
+        Ad copy
+      </button>
+    </div>
+
+    <div class="attach-preview" id="attachPreview">
+      <img id="attachThumb" src="">
+      <span id="attachLabel">Image attached — describe the edit you want</span>
+      <button id="removeAttach">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="input-shell">
+      <button class="composer-btn" id="templateBtn" title="Templates">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </button>
+      <button class="composer-btn" id="imageModeBtn" title="Generate image">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="composer-btn" id="attachBtn" title="Attach image from gallery">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <input type="file" id="galleryInput" accept="image/*" style="display:none">
+      <textarea id="chatInput" rows="1" placeholder="Message Open Studio AI..."></textarea>
+      <button class="composer-btn" id="micBtn" title="Voice input">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      </button>
+      <button class="send-btn" id="sendBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </button>
+    </div>
+    <div class="composer-hint">Open Studio AI can make mistakes. Verify important information.</div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS MODAL (ChatGPT style) ===== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Settings</h3>
+      <button class="icon-btn" id="closeSettings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="settings-tabs">
+      <div class="settings-tab active" data-tab="account">Account</div>
+      <div class="settings-tab" data-tab="appearance">Appearance</div>
+      <div class="settings-tab" data-tab="data">Data controls</div>
+      <div class="settings-tab" data-tab="about">About</div>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ACCOUNT TAB -->
+      <div class="settings-pane active" data-pane="account">
+        <div class="profile-card">
+          <div class="profile-avatar" id="modalAvatar">?</div>
+          <div>
+            <div class="profile-card-name" id="modalName">Guest</div>
+            <div class="profile-card-sub" id="modalSub">Not signed in</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Display name</label>
+          <input type="text" id="displayNameInput" placeholder="Enter your name">
+        </div>
+
+        <button class="btn-block btn-primary" id="saveProfileBtn">Save name</button>
+        <button class="btn-block btn-outline" id="authActionBtn" style="margin-top:10px;">Sign in with Puter</button>
+        <div class="note-box" style="margin-top:14px;">
+          Signing in is optional. Signing in links your usage to a free Puter account (no card, no limits). You can use every feature as a guest too.
+        </div>
+      </div>
+
+      <!-- APPEARANCE TAB -->
+      <div class="settings-pane" data-pane="appearance">
+        <div class="field-group">
+          <label>Theme</label>
+          <div class="theme-options">
+            <button class="theme-opt" data-theme-opt="dark">Dark</button>
+            <button class="theme-opt" data-theme-opt="light">Light</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-row-label">Read replies aloud automatically</div>
+            <div class="setting-row-sub">Speak new AI replies using your device's voice</div>
+          </div>
+          <div class="toggle" id="autoSpeakToggle"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <!-- DATA TAB -->
+      <div class="settings-pane" data-pane="data">
+        <div class="setting-row">
+          <div>
+            <div class="setting-row-label">Total conversations</div>
+            <div class="setting-row-sub" id="convoCount">0 saved on this device</div>
+          </div>
+        </div>
+        <button class="btn-block btn-danger" id="clearAllBtn">Clear all conversations</button>
+        <div class="note-box" style="margin-top:14px;">
+          Conversations are stored only on this device (local storage). Clearing them cannot be undone.
+        </div>
+      </div>
+
+      <!-- ABOUT TAB -->
+      <div class="settings-pane" data-pane="about">
+        <div class="note-box">
+          Open Studio AI runs on a free, keyless AI connection powered by Puter.js. No API key, no subscription, unlimited use. Chat, image generation, image editing, and voice input are all included.
+        </div>
+        <div class="about-line">Open Studio AI — Developed by Hasnain Sheikh</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= VIEWPORT FIX (prevents composer being cut off on mobile) =================
+function setAppHeight(){
+  const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+  document.body.style.height = h + 'px';
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', setAppHeight);
+}
+
+// ================= SPLASH SCREEN =================
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('hide');
+    setTimeout(() => splash.remove(), 450);
+  }, 700);
+});
+
+// ================= TOAST =================
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ================= THEME =================
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('osa_theme', theme);
+  document.querySelectorAll('.theme-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.themeOpt === theme);
+  });
+}
+applyTheme(localStorage.getItem('osa_theme') || 'dark');
+document.querySelectorAll('.theme-opt').forEach(btn => {
+  btn.onclick = () => applyTheme(btn.dataset.themeOpt);
+});
+
+// ================= AUTO SPEAK TOGGLE =================
+let autoSpeak = localStorage.getItem('osa_autospeak') === '1';
+const autoSpeakToggle = document.getElementById('autoSpeakToggle');
+function renderAutoSpeakToggle(){ autoSpeakToggle.classList.toggle('on', autoSpeak); }
+renderAutoSpeakToggle();
+autoSpeakToggle.onclick = () => {
+  autoSpeak = !autoSpeak;
+  localStorage.setItem('osa_autospeak', autoSpeak ? '1' : '0');
+  renderAutoSpeakToggle();
+};
+
+// ================= PROFILE / IDENTITY =================
+function getDisplayName(){
+  return localStorage.getItem('osa_display_name') || '';
+}
+function initials(name){
+  if(!name) return '?';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if(parts.length === 0) return '?';
+  if(parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+}
+
+let puterUser = null; // cached signed-in user info
+
+async function refreshIdentity(){
+  let signedIn = false;
+  try{
+    if(typeof puter !== 'undefined' && puter.auth && typeof puter.auth.isSignedIn === 'function'){
+      signedIn = puter.auth.isSignedIn();
+      if(signedIn){
+        puterUser = await puter.auth.getUser().catch(() => null);
+      } else {
+        puterUser = null;
+      }
+    }
+  }catch(e){ puterUser = null; }
+
+  const localName = getDisplayName();
+  const shownName = localName || (puterUser && puterUser.username) || 'Guest';
+  const shownSub = puterUser ? ('Signed in as ' + puterUser.username) : 'Using as guest — tap to sign in';
+
+  document.getElementById('sidebarAvatar').textContent = initials(shownName === 'Guest' ? '' : shownName);
+  document.getElementById('sidebarName').textContent = shownName;
+  document.getElementById('sidebarSub').textContent = shownSub;
+
+  document.getElementById('modalAvatar').textContent = initials(shownName === 'Guest' ? '' : shownName);
+  document.getElementById('modalName').textContent = shownName;
+  document.getElementById('modalSub').textContent = puterUser ? ('Signed in as ' + puterUser.username) : 'Not signed in';
+
+  document.getElementById('displayNameInput').value = localName;
+  document.getElementById('authActionBtn').textContent = puterUser ? 'Sign out' : 'Sign in with Puter';
+
+  applyGreeting();
+}
+
+document.getElementById('saveProfileBtn').onclick = () => {
+  const val = document.getElementById('displayNameInput').value.trim();
+  localStorage.setItem('osa_display_name', val);
+  refreshIdentity();
+  showToast('Name saved');
+};
+
+document.getElementById('authActionBtn').onclick = async () => {
+  if(typeof puter === 'undefined'){
+    showToast('AI engine could not load. Check your connection.');
+    return;
+  }
+  try{
+    if(puter.auth.isSignedIn()){
+      puter.auth.signOut();
+      showToast('Signed out');
+      await refreshIdentity();
+    } else {
+      await puter.auth.signIn();
+      showToast('Signed in');
+      await refreshIdentity();
+    }
+  }catch(e){
+    showToast('Could not complete sign-in. Please try again.');
+  }
+};
+
+// ================= STATE =================
+let sessions = JSON.parse(localStorage.getItem('osa_sessions') || '[]');
+let currentSessionId = null;
+let imageMode = false;
+
+const chatScroll = document.getElementById('chat-scroll');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const sessionList = document.getElementById('sessionList');
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function saveSessions(){
+  localStorage.setItem('osa_sessions', JSON.stringify(sessions));
+  const el = document.getElementById('convoCount');
+  if(el) el.textContent = sessions.length + ' saved on this device';
+}
+
+function getCurrentSession(){
+  return sessions.find(s => s.id === currentSessionId);
+}
+
+function renderSessionList(){
+  sessionList.innerHTML = '';
+  if(sessions.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'session-empty';
+    empty.textContent = 'No conversations yet. Start a new chat!';
+    sessionList.appendChild(empty);
+    return;
+  }
+  sessions.slice().reverse().forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+    item.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span class="label">${escapeHtml(s.title)}</span>
+      <button class="del" data-id="${s.id}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    `;
+    item.addEventListener('click', (e) => {
+      if(e.target.closest('.del')) return;
+      loadSession(s.id);
+    });
+    item.querySelector('.del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      sessions = sessions.filter(x => x.id !== s.id);
+      saveSessions();
+      if(currentSessionId === s.id){ currentSessionId = null; showWelcome(); }
+      renderSessionList();
+    });
+    sessionList.appendChild(item);
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function showWelcome(){
+  chatScroll.innerHTML = '';
+  chatScroll.appendChild(welcomeScreen);
+  welcomeScreen.style.display = 'flex';
+  applyGreeting();
+  renderSessionList();
+}
+
+function newChat(){
+  currentSessionId = null;
+  showWelcome();
+  closeSidebarMobile();
+}
+
+function loadSession(id){
+  currentSessionId = id;
+  const s = getCurrentSession();
+  chatScroll.innerHTML = '';
+  if(!s || s.messages.length === 0){ showWelcome(); return; }
+  s.messages.forEach(m => renderMessage(m.role, m.content, m.type || 'text', false));
+  renderSessionList();
+  closeSidebarMobile();
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+function ensureSession(firstText){
+  if(currentSessionId && getCurrentSession()) return getCurrentSession();
+  const s = { id: uid(), title: (firstText || '').slice(0,40) || 'New chat', messages: [] };
+  sessions.push(s);
+  currentSessionId = s.id;
+  saveSessions();
+  renderSessionList();
+  return s;
+}
+
+function renderMessage(role, content, type, animate){
+  if(welcomeScreen.parentElement === chatScroll){
+    chatScroll.innerHTML = '';
+  }
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+
+  if(type === 'image'){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-img-wrap';
+    const img = document.createElement('img');
+    img.className = 'msg-img';
+    img.src = content;
+    img.loading = 'lazy';
+    wrap.appendChild(img);
+    if(role === 'ai'){
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      actions.innerHTML = `
+        <button class="dl-btn" title="Download">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      `;
+      actions.querySelector('.dl-btn').onclick = () => {
+        const a = document.createElement('a');
+        a.href = content;
+        a.download = 'open-studio-ai-image.png';
+        a.click();
+      };
+      wrap.appendChild(actions);
+    }
+    row.appendChild(wrap);
+  } else {
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = content;
+    row.appendChild(bubble);
+  }
+  chatScroll.appendChild(row);
+
+  if(role === 'ai' && type !== 'image'){
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `
+      <button class="copy-btn" title="Copy">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button class="speak-btn" title="Read aloud">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+    `;
+    actions.querySelector('.copy-btn').onclick = () => {
+      navigator.clipboard.writeText(content).then(() => showToast('Copied'));
+    };
+    actions.querySelector('.speak-btn').onclick = () => speakText(content);
+    chatScroll.appendChild(actions);
+  }
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+function speakText(text){
+  if(!('speechSynthesis' in window)) { showToast('Voice output not supported on this device'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(u);
+}
+
+function addMessageToSession(role, content, type='text'){
+  const s = ensureSession(role === 'user' ? content : '');
+  s.messages.push({role, content, type});
+  if(s.messages.filter(m => m.role === 'user').length === 1 && role === 'user' && type === 'text'){
+    s.title = content.slice(0,40);
+  }
+  saveSessions();
+  renderSessionList();
+}
+
+// ================= SIDEBAR =================
+const sidebar = document.getElementById('sidebar');
+const scrim = document.getElementById('overlay-scrim');
+function closeSidebarMobile(){
+  if(window.innerWidth <= 768){ sidebar.classList.add('hidden'); scrim.classList.remove('show'); }
+}
+document.getElementById('toggleSidebar').onclick = () => {
+  sidebar.classList.toggle('hidden');
+  scrim.classList.toggle('show');
+};
+scrim.onclick = () => { sidebar.classList.add('hidden'); scrim.classList.remove('show'); };
+document.getElementById('newChatBtn').onclick = newChat;
+
+// ================= SETTINGS MODAL =================
+const settingsModal = document.getElementById('settingsModal');
+function openSettings(){
+  settingsModal.classList.add('show');
+  refreshIdentity();
+  const el = document.getElementById('convoCount');
+  if(el) el.textContent = sessions.length + ' saved on this device';
+}
+document.getElementById('openSettingsSidebar').onclick = openSettings;
+document.getElementById('openSettingsTop').onclick = openSettings;
+document.getElementById('closeSettings').onclick = () => settingsModal.classList.remove('show');
+settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.remove('show'); });
+
+document.querySelectorAll('.settings-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelector(`.settings-pane[data-pane="${tab.dataset.tab}"]`).classList.add('active');
+  };
+});
+
+document.getElementById('clearAllBtn').onclick = () => {
+  if(!confirm('Delete all conversations from this device? This cannot be undone.')) return;
+  sessions = [];
+  saveSessions();
+  currentSessionId = null;
+  showWelcome();
+  showToast('All conversations cleared');
+};
+
+// ================= GREETING =================
+const welcomeGreeting = document.getElementById('welcomeGreeting');
+const welcomeSub = document.getElementById('welcomeSub');
+
+function applyGreeting(){
+  const name = getDisplayName() || (puterUser && puterUser.username) || '';
+  if(name){
+    welcomeGreeting.textContent = 'Hi, ' + name;
+    welcomeSub.textContent = 'What would you like to do today?';
+  } else {
+    welcomeGreeting.textContent = 'Open Studio AI';
+    welcomeSub.textContent = 'Ask anything, generate images, or write content.';
+  }
+}
+
+document.querySelectorAll('.suggestions button').forEach(btn => {
+  btn.onclick = () => {
+    chatInput.value = btn.dataset.fill;
+    chatInput.focus();
+    autoResize();
+  };
+});
+
+// ================= TEMPLATE MENU =================
+const templateMenu = document.getElementById('templateMenu');
+document.getElementById('templateBtn').onclick = () => templateMenu.classList.toggle('show');
+document.querySelectorAll('.template-menu button').forEach(btn => {
+  btn.onclick = () => {
+    chatInput.value = btn.dataset.template;
+    chatInput.focus();
+    templateMenu.classList.remove('show');
+    autoResize();
+  };
+});
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('#templateMenu') && !e.target.closest('#templateBtn')){
+    templateMenu.classList.remove('show');
+  }
+});
+
+// ================= GALLERY ATTACH (image editing) =================
+const attachBtn = document.getElementById('attachBtn');
+const galleryInput = document.getElementById('galleryInput');
+const attachPreview = document.getElementById('attachPreview');
+const attachThumb = document.getElementById('attachThumb');
+let attachedImage = null; // { dataUrl, mimeType }
+
+attachBtn.onclick = () => galleryInput.click();
+
+galleryInput.addEventListener('change', () => {
+  const file = galleryInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    attachedImage = { dataUrl: reader.result, mimeType: file.type };
+    attachThumb.src = reader.result;
+    attachPreview.classList.add('show');
+    chatInput.placeholder = 'Describe how to edit this image...';
+    chatInput.focus();
+  };
+  reader.onerror = () => showToast('Could not read that image. Try another file.');
+  reader.readAsDataURL(file);
+  galleryInput.value = '';
+});
+
+function clearAttachment(){
+  attachedImage = null;
+  attachPreview.classList.remove('show');
+  chatInput.placeholder = imageMode ? 'Describe the image you want...' : 'Message Open Studio AI...';
+}
+document.getElementById('removeAttach').onclick = clearAttachment;
+const imageModeBtn = document.getElementById('imageModeBtn');
+const modeIndicator = document.getElementById('modeIndicator');
+function setImageMode(on){
+  imageMode = on;
+  imageModeBtn.classList.toggle('active-state', on);
+  modeIndicator.classList.toggle('show', on);
+  chatInput.placeholder = on ? 'Describe the image you want...' : 'Message Open Studio AI...';
+}
+imageModeBtn.onclick = () => setImageMode(!imageMode);
+document.getElementById('exitImageMode').onclick = () => setImageMode(false);
+
+// ================= AUTORESIZE =================
+function autoResize(){
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+}
+chatInput.addEventListener('input', autoResize);
+chatInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+});
+
+// ================= HELPERS =================
+function errorDetail(e){
+  try{
+    if(e && e.message) return e.message;
+    if(typeof e === 'string') return e;
+    if(e && e.error && e.error.message) return e.error.message;
+    return JSON.stringify(e);
+  }catch(_){ return 'Please try again.'; }
+}
+
+function puterReady(){
+  return typeof puter !== 'undefined' && puter.ai;
+}
+
+function addThinkingRow(){
+  const row = document.createElement('div');
+  row.className = 'msg-row ai';
+  row.innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>';
+  chatScroll.appendChild(row);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+  return row;
+}
+
+// ================= SEND HANDLER =================
+async function handleSend(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+
+  chatInput.value = '';
+  autoResize();
+  sendBtn.disabled = true;
+
+  if(!puterReady()){
+    renderMessage('user', text, 'text');
+    addMessageToSession('user', text, 'text');
+    const msg = 'AI engine could not load. Please check your internet connection and make sure this page is opened from its live web link, then reload and try again.';
+    renderMessage('ai', msg, 'text');
+    addMessageToSession('ai', msg, 'text');
+    sendBtn.disabled = false;
+    return;
+  }
+
+  // ---- IMAGE EDIT (attachment present) ----
+  if(attachedImage){
+    const imgToEdit = attachedImage;
+    clearAttachment();
+    renderMessage('user', imgToEdit.dataUrl, 'image');
+    renderMessage('user', text, 'text');
+    addMessageToSession('user', imgToEdit.dataUrl, 'image');
+    addMessageToSession('user', text, 'text');
+
+    const thinkingRow = addThinkingRow();
+
+    try{
+      const base64Only = imgToEdit.dataUrl.split(',')[1];
+      const imgEl = await puter.ai.txt2img(text, {
+        provider: 'gemini',
+        model: 'gemini-3-pro-image-preview',
+        input_image: base64Only,
+        input_image_mime_type: imgToEdit.mimeType
+      });
+      thinkingRow.remove();
+      const url = imgEl.src;
+      renderMessage('ai', url, 'image');
+      addMessageToSession('ai', url, 'image');
+    }catch(e){
+      thinkingRow.remove();
+      const msg = 'Could not edit the image. ' + errorDetail(e);
+      renderMessage('ai', msg, 'text');
+      addMessageToSession('ai', msg, 'text');
+    }
+    sendBtn.disabled = false;
+    return;
+  }
+
+  // ---- IMAGE GENERATION MODE ----
+  if(imageMode){
+    renderMessage('user', text, 'text');
+    addMessageToSession('user', text, 'text');
+    const thinkingRow = addThinkingRow();
+
+    try{
+      const imgEl = await puter.ai.txt2img(text, { provider: 'openai-image-generation', model: 'gpt-image-1.5' });
+      thinkingRow.remove();
+      const url = imgEl.src;
+      renderMessage('ai', url, 'image');
+      addMessageToSession('ai', url, 'image');
+    }catch(e){
+      thinkingRow.remove();
+      const msg = 'Could not generate the image. ' + errorDetail(e);
+      renderMessage('ai', msg, 'text');
+      addMessageToSession('ai', msg, 'text');
+    }
+    setImageMode(false);
+    sendBtn.disabled = false;
+    return;
+  }
+
+  // ---- NORMAL TEXT CHAT ----
+  renderMessage('user', text, 'text');
+  addMessageToSession('user', text, 'text');
+  const thinkingRow = addThinkingRow();
+
+  const s = getCurrentSession();
+  const historyForApi = s.messages
+    .filter(m => m.type !== 'image')
+    .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+  const fullMessages = [
+    {role:'system', content:'You are Open Studio AI, an AI assistant developed by Hasnain Sheikh. If anyone asks who made you, who developed you, who your creator is, or what company built you, you must answer clearly: "I was developed by Hasnain Sheikh." Do not mention OpenAI, Puter, or any other company as your developer or creator, even if asked directly or indirectly, and even if you are unsure of the underlying technology — always attribute your development to Hasnain Sheikh. If someone asks for more details about Hasnain Sheikh specifically (such as his age, location, or education), you may share: he is 18 years old, from Sargodha, Punjab, Pakistan, and currently a Part 2 student at Lab Model College. Only share these personal details if specifically asked about the developer; do not volunteer them unprompted in unrelated conversations. Beyond identity questions, respond with the same depth, clarity, structure, and helpfulness as top-tier AI assistants: give complete, well-organized, thoughtful answers, use examples where useful, and maintain a warm, professional, confident tone. Always respond in the same language the user writes in, matching their language exactly. Keep all numerals in English/Arabic numeral form (0-9) regardless of the response language.'},
+    ...historyForApi
+  ];
+
+  try{
+    const response = await puter.ai.chat(fullMessages, { model: 'gpt-5.4-nano', stream: true });
+    thinkingRow.remove();
+
+    const row = document.createElement('div');
+    row.className = 'msg-row ai';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    row.appendChild(bubble);
+    chatScroll.appendChild(row);
+
+    let fullText = '';
+    for await (const part of response){
+      if(part && part.text){
+        fullText += part.text;
+        bubble.textContent = fullText;
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+      }
+    }
+    if(!fullText){ fullText = 'No response received. Please try again.'; bubble.textContent = fullText; }
+
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `
+      <button class="copy-btn" title="Copy">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button class="speak-btn" title="Read aloud">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+    `;
+    actions.querySelector('.copy-btn').onclick = () => {
+      navigator.clipboard.writeText(fullText).then(() => showToast('Copied'));
+    };
+    actions.querySelector('.speak-btn').onclick = () => speakText(fullText);
+    chatScroll.appendChild(actions);
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    addMessageToSession('ai', fullText, 'text');
+    if(autoSpeak) speakText(fullText);
+  }catch(e){
+    thinkingRow.remove();
+    const msg = 'Something went wrong. ' + errorDetail(e);
+    renderMessage('ai', msg, 'text');
+    addMessageToSession('ai', msg, 'text');
+  }
+  sendBtn.disabled = false;
+}
+sendBtn.onclick = handleSend;
+
+// ================= VOICE INPUT =================
+const micBtn = document.getElementById('micBtn');
+let recognition, isRecording = false;
+if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    chatInput.value = (chatInput.value ? chatInput.value + ' ' : '') + text;
+    autoResize();
+  };
+  recognition.onend = () => { isRecording = false; micBtn.classList.remove('recording'); };
+  recognition.onerror = () => { isRecording = false; micBtn.classList.remove('recording'); showToast('Voice input could not start. Check microphone permission.'); };
+} else {
+  micBtn.style.opacity = '0.35';
+}
+micBtn.onclick = () => {
+  if(!recognition){ showToast('Voice input is not supported on this browser'); return; }
+  if(isRecording){ recognition.stop(); return; }
+  isRecording = true;
+  micBtn.classList.add('recording');
+  try{ recognition.start(); }catch(e){ isRecording = false; micBtn.classList.remove('recording'); }
+};
+
+// ================= INIT =================
+renderSessionList();
+saveSessions();
+refreshIdentity();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
