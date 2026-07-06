@@ -1159,7 +1159,7 @@ async function handleSend(){
     ];
 
     async function runChat(){
-      const response = await puter.ai.chat(fullMessages, { model: 'gpt-5.4-nano', stream: true });
+      const response = await puter.ai.chat(fullMessages, { model: 'claude-sonnet-5', stream: true });
       const row = document.createElement('div');
       row.className = 'msg-row ai';
       const bubble = document.createElement('div');
